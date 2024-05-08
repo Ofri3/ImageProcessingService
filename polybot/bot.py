@@ -1,7 +1,8 @@
 import telebot
-from loguru import logger
 import os
 import time
+from PIL import Image
+from loguru import logger
 from telebot.types import InputFile
 from polybot.img_proc import Img
 
@@ -69,10 +70,113 @@ class Bot:
 class QuoteBot(Bot):
     def handle_message(self, msg):
         logger.info(f'Incoming message: {msg}')
+        print(msg)
 
         if msg["text"] != 'Please don\'t quote me':
             self.send_text_with_quote(msg['chat']['id'], msg["text"], quoted_msg_id=msg["message_id"])
 
 
 class ImageProcessingBot(Bot):
-    pass
+    def handle_message(self, msg):
+        logger.info(f'Incoming message: {msg}')
+
+        if self.is_current_msg_photo(msg):
+            # Download the photo sent by the user
+            img_path = self.download_user_photo(msg)
+            # Process the image according to the caption provided
+            self.process_image(msg['chat']['id'], img_path, msg.get('caption'))
+        else:
+            # Extract the user's first name
+            first_name = msg['from'].get('first_name', 'there')
+            # Greet the user by their name
+            greeting_message = f"Hi, {first_name}! Please send a photo with a caption indicating the filter you wish to apply."
+            self.send_text(msg['chat']['id'], greeting_message)
+
+    def process_image(self, chat_id, img_path, caption):
+        if caption:
+            # Normalize the caption for comparison
+            normalized_caption = caption.strip().lower()
+            # Check the caption and apply the corresponding image processing filter
+            if normalized_caption == 'blur':
+                self.apply_custom_filter(chat_id, img_path, 'blur')
+            elif normalized_caption == 'contour':
+                self.apply_custom_filter(chat_id, img_path, 'contour')
+            elif normalized_caption == 'concat':
+                self.apply_concat_filter(chat_id, img_path)
+            elif normalized_caption == 'segment':
+                self.apply_custom_filter(chat_id, img_path, 'segment')
+            elif normalized_caption.startswith('rotate'):
+                try:
+                    # Split the caption and extract the number of rotations
+                    rotations = int(normalized_caption.split()[1])
+                    self.apply_custom_filter(chat_id, img_path, 'rotate', rotations)
+                except (IndexError, ValueError):
+                    # If no number provided, default to 1 rotation
+                    self.apply_custom_filter(chat_id, img_path, 'rotate', 1)
+            elif normalized_caption.startswith('salt and pepper'):
+                try:
+                    # Split the caption and extract the number of iterations
+                    iterations = int(normalized_caption.split()[3])
+                    self.apply_custom_filter(chat_id, img_path, 'salt and pepper', iterations)
+                except (IndexError, ValueError):
+                    # If no number provided, default to 1 iteration
+                    self.apply_custom_filter(chat_id, img_path, 'salt and pepper', 1)
+            elif normalized_caption == 'median':
+                self.apply_custom_filter(chat_id, img_path, 'median')
+            elif normalized_caption == 'edge extraction':
+                self.apply_custom_filter(chat_id, img_path, 'edge extraction')
+            else:
+                self.send_text(chat_id,
+                               "Unsupported filter. Supported filters are: Blur, Contour, Segment, Rotate, Salt and Pepper, Concat, Median, Edge Extraction")
+                self.send_text(chat_id,
+                               "You can extend 'Rotate' and 'Salt and Pepper' filters by specify 'Rotate 2' to rotate the image twice, or 'Salt and Pepper 5' to make the image more noisy. Enjoy!")
+        else:
+            # If no caption provided, send a response indicating that a caption is required
+            self.send_text(chat_id, "Please provide a filter caption with the photo.")
+
+    def apply_custom_filter(self, chat_id, img_path, filter_name, rotations=1):
+        # Instantiate the Img class with the provided image path
+        img = Img(img_path)
+
+        # Apply the specified filter
+        if filter_name == 'blur':
+            img.blur()
+        elif filter_name == 'contour':
+            img.contour()
+        elif filter_name == 'segment':
+            img.segment()
+        elif filter_name == 'rotate':
+            img.rotate(rotations)
+        elif filter_name == 'salt and pepper':
+            # Get the number of iterations from the `rotations` argument
+            img.salt_n_pepper(iterations=rotations)
+        elif filter_name == 'median':
+            img.median()
+        elif filter_name == 'edge extraction':
+            img.edge_extraction()
+
+        # Save the modified image
+        new_img_path = img.save_img()
+
+        # Send the modified image back to the user
+        self.send_photo(chat_id, new_img_path)
+
+        # Delete the temporary file
+        os.remove(img_path)
+
+    def apply_concat_filter(self, chat_id, img_path):
+        # Apply concatenation filter to the image located at img_path
+        original_img = Image.open(img_path)
+        width, height = original_img.size
+        half_width = width // 1
+        processed_img = Image.new('RGB', (width * 2, height))
+        processed_img.paste(original_img, (0, 0))
+        processed_img.paste(original_img.transpose(Image.FLIP_LEFT_RIGHT), (half_width, 0))
+        processed_img_path = f"{img_path.split('.')[0]}_concat.jpg"
+        processed_img.save(processed_img_path)
+
+        # Send the modified image back to the user
+        self.send_photo(chat_id, processed_img_path)
+
+        # Delete the temporary file
+        os.remove(processed_img_path)
