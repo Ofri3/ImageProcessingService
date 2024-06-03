@@ -7,8 +7,8 @@ pipeline {
                     bat '''
                         copy polybot/app.py .
                         docker login -u $USER -p $PASS
-                        docker build -t ofriz/jenkins-ex .
-                        docker push ofriz/jenkins-ex
+                        docker build -t ofriz/jenkins-ex:${BUILD_NUMBER} .
+                        docker push ofriz/jenkins-ex:${BUILD_NUMBER}
                     '''
                 }
             }
