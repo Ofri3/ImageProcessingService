@@ -1,14 +1,19 @@
 pipeline {
     agent any
+
+    env {
+        IMG_NAME = polybot:${BUILD_NUMBER}
+    }
     stages {
         stage('Build docker image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     bat '''
-                        copy polybot/app.py .
+                        cd polybot
                         docker login -user $USER --password-stdin $PASS
-                        docker build -t ofriz/jenkins-ex:poly-bot-${env.BUILD_NUMBER} .
-                        docker push ofriz/jenkins-ex:poly-bot-${env.BUILD_NUMBER}
+                        docker build -t $IMG_NAME .
+                        docker tag $IMG_NAME ofriz/$IMG_NAME
+                        docker push ofriz/$IMG_NAME
                     '''
                 }
             }
