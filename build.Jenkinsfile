@@ -1,7 +1,6 @@
 pipeline {
     agent any
-
-    env {
+    environment {
         IMG_NAME = polybot:${BUILD_NUMBER}
     }
     stages {
