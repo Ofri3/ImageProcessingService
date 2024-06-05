@@ -10,9 +10,9 @@ pipeline {
                     bat '''
                         cd polybot
                         docker login -u $USER -p $PASS
-                        docker build -t $IMG_NAME .
-                        docker tag $IMG_NAME ofriz/$IMG_NAME
-                        docker push ofriz/$IMG_NAME
+                        docker build -t ${IMG_NAME} .
+                        docker tag ${IMG_NAME} ofriz/${IMG_NAME}
+                        docker push ofriz/${IMG_NAME}
                     '''
                 }
             }
