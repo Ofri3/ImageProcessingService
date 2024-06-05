@@ -6,9 +6,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     bat '''
                         copy polybot/app.py .
-                        docker login -u $USER -p $PASS
-                        docker build -t ofriz/jenkins-ex:${BUILD_NUMBER} .
-                        docker push ofriz/jenkins-ex:${BUILD_NUMBER}
+                        docker login -user $USER --password-stdin $PASS
+                        docker build -t ofriz/jenkins-ex:poly-bot-${env.BUILD_NUMBER} .
+                        docker push ofriz/jenkins-ex:poly-bot-${env.BUILD_NUMBER}
                     '''
                 }
             }
