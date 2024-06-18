@@ -72,7 +72,7 @@ class QuoteBot(Bot):
         logger.info(f'Incoming message: {msg}')
         print(msg)
 
-        if msg["text"] != 'Please don\'t quote me':
+        if msg["text"] != 'Please don\'t quote me.':
             self.send_text_with_quote(msg['chat']['id'], msg["text"], quoted_msg_id=msg["message_id"])
 
 
@@ -89,7 +89,7 @@ class ImageProcessingBot(Bot):
             # Extract the user's first name
             first_name = msg['from'].get('first_name', 'there')
             # Greet the user by their name
-            greeting_message = f"Hi, {first_name}! Please send a photo with a caption indicating the filter you wish to apply."
+            greeting_message = f"Hi, {first_name}! Please send a photo with a caption indicating the filter you wish to apply. Supported filters are: Blur, Contour, Segment, Rotate, Salt and Pepper, Concat, Median, Edge Extraction"
             self.send_text(msg['chat']['id'], greeting_message)
 
     def process_image(self, chat_id, img_path, caption):
@@ -131,7 +131,7 @@ class ImageProcessingBot(Bot):
                 self.send_text(chat_id,
                                "You can extend 'Rotate' and 'Salt and Pepper' filters by specify 'Rotate 2' to rotate the image twice, or 'Salt and Pepper 5' to make the image more noisy. Enjoy!")
         else:
-            # If no caption provided, send a response indicating that a caption is required
+            # If no caption provided, send a response indicating that a caption is required.
             self.send_text(chat_id, "Please provide a filter caption with the photo.")
 
     def apply_custom_filter(self, chat_id, img_path, filter_name, rotations=1):

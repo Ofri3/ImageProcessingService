@@ -217,7 +217,6 @@ class Img:
 my_img = Img(r'./test/beatles.jpeg')
 
     # Perform operations on the image
-my_img.blur()
 my_img.contour()
 my_img.concat(my_img, direction='horizontal')
     # You can perform other operations as needed
