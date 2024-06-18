@@ -1,10 +1,10 @@
-import telebot
 import os
 import time
+import telebot
 from PIL import Image
 from loguru import logger
 from telebot.types import InputFile
-from polybot.img_proc import Img
+from img_proc import Img
 
 
 class Bot:

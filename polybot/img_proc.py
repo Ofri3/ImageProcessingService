@@ -1,6 +1,6 @@
+import random
 from pathlib import Path
 from matplotlib.image import imread, imsave
-import random
 
 def rgb2gray(rgb):
     r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
@@ -223,4 +223,4 @@ my_img.concat(my_img, direction='horizontal')
     # You can perform other operations as needed
 
     # Save the modified image
-saved_path = my_img.save_img()
+    # saved_path = my_img.save_img()
